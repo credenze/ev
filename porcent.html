@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora carga Citroën C3 Eléctrico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: auto;
+        }
+        input {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Calculadora de carga – Citroën C3 Eléctrico (44 kWh)</h2>
+
+<p>Hora actual: <strong id="horaActual"></strong></p>
+
+<label>
+    Porcentaje actual de batería:
+    <input type="number" id="porcentajeActual" value="30" min="0" max="100">
+</label>
+
+<br><br>
+
+<button onclick="calcular()">Calcular</button>
+
+<br><br>
+
+<canvas id="grafica"></canvas>
+
+<script>
+const CAPACIDAD_KWH = 44;
+const VOLTAJE = 230;
+const AMPERS = [6, 8, 10, 12]; // intensidades a calcular
+
+document.getElementById("horaActual").textContent =
+    new Date().toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' });
+
+let chart;
+
+function calcular() {
+    const porcentajeInicial = Number(document.getElementById("porcentajeActual").value);
+    if (porcentajeInicial < 0 || porcentajeInicial > 100) {
+        alert("Porcentaje no válido");
+        return;
+    }
+
+    const ahora = new Date();
+    const etiquetas = [];
+    for (let i = 0; i < 6; i++) { // 6 horas de proyección
+        let hora = new Date(ahora);
+        hora.setHours(hora.getHours() + i);
+        etiquetas.push(hora.toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' }));
+    }
+
+    const datasets = AMPERS.map(a => {
+        const potenciaKW = (VOLTAJE * a) / 1000;
+        const datos = [];
+        let energia = CAPACIDAD_KWH * (porcentajeInicial / 100);
+
+        for (let i = 0; i < etiquetas.length; i++) {
+            datos.push(Math.min((energia / CAPACIDAD_KWH * 100), 100).toFixed(1));
+            energia += potenciaKW; // cada hora
+        }
+
+        return {
+            label: a + ' A',
+            data: datos,
+            borderWidth: 2,
+            fill: false
+        };
+    });
+
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('grafica').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: etiquetas, datasets },
+        options: {
+            scales: {
+                y: { min: 0, max: 100, title: { display: true, text: '% batería' } },
+                x: { title: { display: true, text: 'Hora' } }
+            }
+        }
+    });
+}
+</script>
+
+</body>
+</html>
