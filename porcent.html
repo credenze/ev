@@ -38,6 +38,7 @@
 const CAPACIDAD_KWH = 44;
 const VOLTAJE = 230;
 const AMPERS = [6, 8, 10, 12]; // intensidades a calcular
+const COLORES = ['red', 'green', 'blue', 'orange'];
 
 document.getElementById("horaActual").textContent =
     new Date().toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' });
@@ -59,13 +60,13 @@ function calcular() {
         etiquetas.push(hora.toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' }));
     }
 
-    const datasets = AMPERS.map(a => {
+    const datasets = AMPERS.map((a, i) => {
         const potenciaKW = (VOLTAJE * a) / 1000;
         const datos = [];
         let energia = CAPACIDAD_KWH * (porcentajeInicial / 100);
 
-        for (let i = 0; i < etiquetas.length; i++) {
-            datos.push(Math.min((energia / CAPACIDAD_KWH * 100), 100).toFixed(1));
+        for (let j = 0; j < etiquetas.length; j++) {
+            datos.push(Number(Math.min((energia / CAPACIDAD_KWH * 100), 100).toFixed(1)));
             energia += potenciaKW; // cada hora
         }
 
@@ -73,7 +74,9 @@ function calcular() {
             label: a + ' A',
             data: datos,
             borderWidth: 2,
-            fill: false
+            fill: false,
+            borderColor: COLORES[i],
+            backgroundColor: COLORES[i]
         };
     });
 
@@ -86,6 +89,9 @@ function calcular() {
             scales: {
                 y: { min: 0, max: 100, title: { display: true, text: '% batería' } },
                 x: { title: { display: true, text: 'Hora' } }
+            },
+            plugins: {
+                legend: { display: true }
             }
         }
     });
